@@ -1,0 +1,74 @@
+---
+title: ""
+date: "`r Sys.Date()`"
+output:
+  rmdformats::readthedown:
+    highlight: kate
+---
+
+```{r setup, include=FALSE}
+## Global options
+knitr::opts_chunk$set(cache = TRUE)
+```
+
+```{r library}
+library(rvest)
+library(tidyverse)
+```
+
+## Cryptocurrency Information
+
+We discussed a few different ways to access data on webpages. In many situations this task is made easier by an API, which is usually a well-built set of functions that facilitate gathering data from a site instead of scraping it yourself. You should always check for the existence of an API FIRST when looking to gather data from an internet source!
+
+In the absence of an API, webscraping is a great approach. So let’s get a little more practice with this.
+
+## Exercises
+
+1. Navigate to the following page: https://goldprice.org/cryptocurrency-price
+
+```{r Navigate}
+cryp_url <- "https://goldprice.org/cryptocurrency-price"
+cryp_url <- read_html(cryp_url)
+```
+
+2. Use the selector gadget and the rvest package to scrape the information from the CryptoCurrency Price table on this webpage.
+
+```{r Scrape}
+Table <- html_nodes(cryp_url, css="table")
+```
+
+3. You may not be able to scrape it in such a way that the result looks just like what it does on the webpage. So, be sure to process your scraped data and organize it so that it’s in the same shape as it is on the webpage.
+
+```{r Process}
+Table <- html_table(Table)
+Table <- data.frame(Table)
+```
+
+4. Clean up the dataset so that it’s easier to work with! Remove dollar signs, commas and percent signs. Convert the percent values to correct decimal values.
+
+```{r Clean}
+Table$Market.Cap. <- gsub('[$,]', '', Table$Market.Cap.)
+Table$Price <- gsub('[$,]', '', Table$Price)
+Table$Circulating.Supply <- gsub('[$,]', '', Table$Circulating.Supply)
+Table$Volume..24h. <- gsub('[$,]', '', Table$Volume..24h.)
+Table$Change..24h. <- gsub('[$,%]', '', Table$Change..24h.)
+
+Table$Change..24h. <- as.numeric(Table$Change..24h.)/100
+
+```
+
+
+5. Identify the top cryptocurrencies with respect to each of the following separately: Market Cap, Price, Change (24h)
+
+```{r Top}
+Table %>% 
+  slice_max(Market.Cap., n=5) 
+
+Table %>% 
+  slice_max(Price, n=5) 
+
+Table %>% 
+  slice_min(Change..24h., n=5)
+
+```
+
